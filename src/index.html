@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
 <title>Realm of Embers</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -11,6 +10,8 @@
 <div id="toast-wrap"></div>
 <script src="data.js"></script>
 <script src="art.js"></script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
 <script src="game.js"></script>
+<script type="module" src="stage3d.js"></script>
 </body>
 </html>

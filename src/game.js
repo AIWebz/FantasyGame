@@ -84,13 +84,14 @@ function titleScreen() {
 function createScreen() {
   const C = CLASSES[selClass];
   app.innerHTML = `<div class="create"><h1 style="text-align:center;font-size:34px">Choose Your Path</h1>
-    <div class="class-grid">${Object.keys(CLASSES).map(k => `<div class="frame class-card ${k === selClass ? 'sel' : ''}" data-c="${k}">${ART.portrait(k)}<div class="nm">${CLASSES[k].name}</div><div class="role">${CLASSES[k].role}</div></div>`).join('')}</div>
-    <div class="frame class-detail"><div>${ART.portrait(selClass)}</div>
+    <div class="class-grid">${Object.keys(CLASSES).map(k => `<div class="frame class-card ${k === selClass ? 'sel' : ''}" data-c="${k}"><img src="${STAGE.portrait(k)}" style="width:100%;border-radius:4px;background:radial-gradient(circle at 50% 30%,#5a3a1a,#0a0604)"><div class="nm">${CLASSES[k].name}</div><div class="role">${CLASSES[k].role}</div></div>`).join('')}</div>
+    <div class="frame class-detail"><div id="sel3d" style="position:relative;height:330px;border:1px solid #5a4020;border-radius:4px;overflow:hidden"></div>
       <div><h2>${C.name} <span class="muted" style="font-size:13px">— ${C.role}</span></h2><p>${C.lore}</p>
         <h3>Base Attributes</h3>${['hp', 'mp', 'str', 'dex', 'int', 'def'].map(k => `<div class="stat-row"><span>${{ hp: 'Health', mp: C.resource, str: 'Strength', dex: 'Dexterity', int: 'Intellect', def: 'Defense' }[k]}</span><span class="gold">${C.base[k]}</span></div>`).join('')}</div>
       <div><h2>Abilities</h2>${C.skills.map(s => `<div style="margin-bottom:8px"><b class="gold">${s.name}</b> <span class="tag">Lv ${s.lvl}</span> <span class="tag">${s.cost} ${C.resource}</span><div class="muted" style="font-size:13px">${s.desc}</div></div>`).join('')}
         <h3>Your Name</h3><input class="input" id="nm" maxlength="16" value="${['Aldric', 'Seren', 'Kael', 'Lyra', 'Tobin', 'Mirelle'][Object.keys(CLASSES).indexOf(selClass)]}">
         <div style="margin-top:14px;display:flex;gap:10px"><button class="btn" id="back">Back</button><button class="btn big" id="go">Begin Journey</button></div></div></div></div>`;
+  STAGE.attach($('#sel3d'), { mode: 'select', env: 'title', cls: selClass });
   document.querySelectorAll('.class-card').forEach(e => e.onclick = () => { selClass = e.dataset.c; sfx(330, .08); createScreen(); });
   $('#back').onclick = titleScreen;
   $('#go').onclick = () => { const n = $('#nm').value.trim() || 'Hero'; P = newPlayer(n, selClass); logs = [];
@@ -107,17 +108,18 @@ function renderGame() {
       <span class="gold">◉ ${P.gold} gold</span><span style="flex:1"></span>
       <button class="btn" id="b-inv">Inventory</button><button class="btn" id="b-menu">Save & Exit</button></div>
     <div class="main">
-      <div class="frame panel"><div class="portrait">${ART.portrait(P.cls, 'p')}</div>
+      <div class="frame panel"><div class="portrait"><img src="${STAGE.portrait(P.cls)}" style="width:100%;border-radius:4px;border:1px solid #5a4020;background:radial-gradient(circle at 50% 30%,#5a3a1a,#0a0604)"></div>
         <div style="margin:8px 0;display:flex;flex-direction:column;gap:4px">${bar('hp', P.hp, P.maxHp)}${bar('mp', P.mp, P.maxMp)}</div>
         <h3>Attributes</h3>${[['Attack', s.atk], ['Defense', s.defT], ['Strength', s.str], ['Dexterity', s.dex], ['Intellect', s.int], ['Crit Chance', Math.round(s.crit * 100) + '%']].map(([a, b]) => `<div class="stat-row"><span>${a}</span><span class="gold">${b}</span></div>`).join('')}
         <h3>Equipment</h3><div class="equip-slot"><span class="muted">Weapon</span><span class="rarity-${GEAR_TIERS[P.weapon].rarity}">${WEAPON_NAMES[P.cls][P.weapon]}</span></div>
         <div class="equip-slot"><span class="muted">Armor</span><span class="rarity-${GEAR_TIERS[P.armor].rarity}">${ARMOR_NAMES[P.cls][P.armor]}</span></div>
         <h3>Skills</h3>${C.skills.map(k => `<div style="font-size:12px;${P.lvl < k.lvl ? 'opacity:.4' : ''}"><b class="gold">${k.name}</b> ${P.lvl < k.lvl ? `(Lv ${k.lvl})` : ''}</div>`).join('')}</div>
-      <div class="center"><div class="frame scene" id="scene">${ART.scene(R.scene)}<div class="scene-content">
+      <div class="center"><div class="frame scene" id="scene"><div id="stage3d" class="scene-bg"></div><div class="scene-content" style="pointer-events:none">
         <h1 class="scene-title">${R.name}</h1>${R.lvl ? `<div class="muted">Recommended level ${R.lvl}</div>` : ''}<div class="scene-desc">${R.desc}</div>
-        <div class="actions" id="acts"></div></div></div>
+        <div class="actions" id="acts" style="pointer-events:auto"></div></div></div>
         <div class="frame log" id="log">${logs.join('')}</div></div>
       <div class="frame panel"><h2>Quest Journal</h2>${questPanel()}</div></div>`;
+  STAGE.attach($('#stage3d'), { mode: 'explore', env: R.scene, cls: P.cls });
   const acts = $('#acts');
   const add = (t, f, c = '', dis = false) => { const b = document.createElement('button'); b.className = 'btn ' + c; b.innerHTML = t; b.disabled = dis; b.onclick = f; acts.appendChild(b); };
   if (P.loc === 'town') {
@@ -197,11 +199,13 @@ function startCombat(key) {
 function renderCombat() {
   const c = combat, e = c.e, C = CLASSES[P.cls];
   const buffs = Object.entries(c.buffs).map(([k, v]) => `${{ def: '🛡', atk: '⚔', evade: '💨', regen: '✚' }[k]} ${v.turns}`).join(' ');
-  $('#scene').innerHTML = ART.scene(REGIONS[P.loc].scene) + `<div class="combat"><div class="arena">
-    <div class="fighter" id="pf">${ART.portrait(P.cls, 'c')}<div class="fn">${P.name}</div><div class="bars">${bar('hp', P.hp, P.maxHp)}${bar('mp', P.mp, P.maxMp)}</div><div class="status-icons">${buffs}</div></div>
+  if (!$('#scene')) { renderGame(); return; }
+  $('#scene').innerHTML = `<div id="stage3d" class="scene-bg"></div><div class="combat"><div class="arena" style="align-items:start">
+    <div class="fighter" id="pf" style="padding-top:4px"><div class="fn">${P.name}</div><div class="bars">${bar('hp', P.hp, P.maxHp)}${bar('mp', P.mp, P.maxMp)}</div><div class="status-icons">${buffs}</div></div>
     <div class="vs">VS</div>
-    <div class="fighter" id="ef">${ART.enemy(c.key)}<div class="fn">${e.name}${e.boss ? ' <span class="tag">BOSS</span>' : ''}</div><div class="bars">${bar('hp', e.hp, e.maxHp)}</div><div class="status-icons">${c.edot ? `☣ ${c.edot.name} ${c.edot.turns}` : ''}${c.stun ? ' ❄ Stunned' : ''}</div></div></div>
+    <div class="fighter" id="ef" style="padding-top:4px"><div class="fn">${e.name}${e.boss ? ' <span class="tag">BOSS</span>' : ''}</div><div class="bars">${bar('hp', e.hp, e.maxHp)}</div><div class="status-icons">${c.edot ? `☣ ${c.edot.name} ${c.edot.turns}` : ''}${c.stun ? ' ❄ Stunned' : ''}</div></div></div>
     <div class="skills" id="sk"></div></div>`;
+  STAGE.attach($('#stage3d'), { mode: 'combat', env: REGIONS[P.loc].scene, cls: P.cls, enemy: c.key });
   const sk = $('#sk'), add = (h, f, cl = '', dis = false) => { const b = document.createElement('button'); b.className = 'btn ' + cl; b.innerHTML = h; b.disabled = dis || c.busy; b.onclick = f; sk.appendChild(b); };
   add('Attack<small>Basic strike</small>', () => act({ type: 'dmg', mult: 1, name: 'Attack', cost: 0 }));
   C.skills.filter(s => s.lvl <= P.lvl).forEach(s => add(`${s.name}<small>${s.cost} ${C.resource}</small>`, () => act(s), 'blue', P.mp < s.cost));
@@ -213,6 +217,7 @@ function floatText(el, t, col) { const f = document.createElement('div'); f.clas
 function act(s) {
   const c = combat, e = c.e, st = stats(); if (c.busy) return;
   P.mp -= s.cost || 0;
+  if (s.type === 'heal' || s.type === 'buff') STAGE.anim('player', 'cast', s.type === 'heal' ? 0x80ff90 : 0x80b0ff);
   if (s.type === 'heal') { const h = Math.floor(P.maxHp * s.mult); P.hp = Math.min(P.maxHp, P.hp + h); log(`${s.name} restores ${h} HP.`, 'heal'); sfx(600, .25, 'sine'); }
   else if (s.type === 'buff') { c.buffs[s.stat] = { amt: s.amt, turns: s.turns }; log(`You use ${s.name}.`, 'heal'); sfx(400, .2, 'triangle'); }
   else {
@@ -230,28 +235,30 @@ function act(s) {
     if (s.stun && Math.random() < s.stun && !e.boss) { c.stun = true; log(`${e.name} is stunned!`); }
     if (s.stun && e.boss && Math.random() < s.stun / 2) { c.stun = true; log(`${e.name} staggers!`); }
     if (s.lifesteal) { const h = Math.floor(total * s.lifesteal); P.hp = Math.min(P.maxHp, P.hp + h); log(`You are healed for ${h}.`, 'heal'); }
+    STAGE.anim('player', 'attack', s.holy ? 0xfff0a0 : s.dot ? 0x90ff40 : P.cls === 'mage' ? 0xff6020 : 0xffd060); setTimeout(() => STAGE.anim('enemy', e.hp <= 0 ? 'die' : 'hit'), 380);
     sfx(180 + Math.random() * 60, .1); const ef = $('#ef'); ef.classList.add('flash'); floatText(ef, '-' + total, '#ffdd60');
   }
   c.busy = true; renderCombatBars();
-  setTimeout(() => { if (e.hp <= 0) return win(); enemyTurn(); }, 650);
+  setTimeout(() => { if (e.hp <= 0) return win(); enemyTurn(); }, e.hp <= 0 ? 1800 : 1100);
 }
 function renderCombatBars() { const b = document.querySelectorAll('#sk .btn'); b.forEach(x => x.disabled = true); }
 function enemyTurn() {
   const c = combat, e = c.e, st = stats(); c.busy = true;
   if (c.edot) { e.hp -= c.edot.dmg; log(`${e.name} suffers ${c.edot.dmg} from ${c.edot.name}.`, 'dmg'); if (--c.edot.turns <= 0) c.edot = null; if (e.hp <= 0) return setTimeout(win, 400); }
   if (c.stun) { c.stun = false; log(`${e.name} cannot act!`); }
-  else if (c.buffs.evade && Math.random() < c.buffs.evade.amt) log(`You evade ${e.name}'s attack!`, 'heal');
+  else if (c.buffs.evade && Math.random() < c.buffs.evade.amt && (STAGE.anim('enemy', 'attack'), true)) log(`You evade ${e.name}'s attack!`, 'heal');
   else {
     const special = e.boss && Math.random() < .25;
     const def = st.defT * (1 + (c.buffs.def ? c.buffs.def.amt : 0));
     let d = Math.max(1, Math.floor(e.atk * (special ? 1.7 : 1) * (.85 + Math.random() * .3) - def * .55));
+    STAGE.anim('enemy', 'attack', e.undead ? 0xa080ff : 0xff5030); setTimeout(() => STAGE.anim('player', P.hp <= 0 ? 'die' : c.buffs.def ? 'block' : 'hit'), 380);
     P.hp -= d; log(`${e.name} ${special ? 'unleashes a devastating attack' : 'hits you'} for ${d}!`, 'dmg'); sfx(90, .2, 'sawtooth');
     const pf = $('#pf'); if (pf) { pf.classList.add('shake'); floatText(pf, '-' + d, '#ff5040'); }
   }
   if (c.buffs.regen) { const h = Math.floor(P.maxHp * c.buffs.regen.amt); P.hp = Math.min(P.maxHp, P.hp + h); log(`Sanctuary heals ${h}.`, 'heal'); }
   for (const k in c.buffs) if (--c.buffs[k].turns <= 0) delete c.buffs[k];
   P.mp = Math.min(P.maxMp, P.mp + Math.ceil(P.maxMp * .04));
-  setTimeout(() => { if (P.hp <= 0) return lose(); c.busy = false; renderCombat(); }, 600);
+  setTimeout(() => { if (P.hp <= 0) return lose(); c.busy = false; renderCombat(); }, P.hp <= 0 ? 2200 : 1100);
 }
 function win() {
   const c = combat, E = ENEMIES[c.key], g = rnd(...E.gold);
@@ -273,4 +280,6 @@ function victory() {
   $('#cont2').onclick = renderGame; $('#tm').onclick = titleScreen;
 }
 document.addEventListener('keydown', e => { if (combat && !combat.busy && /^[1-9]$/.test(e.key)) { const b = document.querySelectorAll('#sk .btn')[+e.key - 1]; if (b && !b.disabled) b.click(); } });
-titleScreen();
+app.innerHTML = '<div class="title-screen"><h1 class="logo">REALM OF EMBERS<small>FORGING THE REALM…</small></h1></div>';
+function boot() { STAGE.ready.then(titleScreen).catch(e => { app.innerHTML = '<p style="padding:40px">Failed to load 3D assets: ' + e + '</p>'; }); }
+if (window.STAGE) boot(); else window.addEventListener('stage-ready', boot);

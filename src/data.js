@@ -85,8 +85,8 @@ function xpForLevel(l) { return Math.floor(100 * Math.pow(l, 1.65)); }
 const MAX_LEVEL = 20;
 
 const ENEMIES = {
-  wolf: { name: 'Grey Wolf', kind: 'beast', color: '#6a6a70', hp: 45, atk: 9, def: 2, xp: 22, gold: [2, 6], lvl: 1 },
-  spider: { name: 'Giant Spider', kind: 'spider', color: '#3a2a3a', hp: 55, atk: 11, def: 3, xp: 28, gold: [3, 8], lvl: 2, drops: [['silk', 0.5]] },
+  wolf: { name: 'Woodland Raider', kind: 'beast', color: '#6a6a70', hp: 45, atk: 9, def: 2, xp: 22, gold: [2, 6], lvl: 1 },
+  spider: { name: 'Bog Witch', kind: 'spider', color: '#3a2a3a', hp: 55, atk: 11, def: 3, xp: 28, gold: [3, 8], lvl: 2, drops: [['silk', 0.5]] },
   goblin: { name: 'Goblin Scout', kind: 'humanoid', color: '#5a8a3a', hp: 50, atk: 10, def: 3, xp: 26, gold: [5, 12], lvl: 2, weapon: 'dagger' },
   warchief: { name: 'Grukk the Warchief', kind: 'humanoid', color: '#4a7a2a', hp: 180, atk: 16, def: 6, xp: 140, gold: [60, 90], lvl: 4, boss: true, weapon: 'axe', size: 1.2 },
   bandit: { name: 'Bandit Cutthroat', kind: 'humanoid', color: '#7a5a3a', hp: 90, atk: 17, def: 6, xp: 48, gold: [10, 22], lvl: 4, weapon: 'sword', hood: true, drops: [['ring', 0.15]] },
@@ -97,7 +97,7 @@ const ENEMIES = {
   wraith: { name: 'Crypt Wraith', kind: 'wraith', color: '#7a8ab0', hp: 120, atk: 32, def: 6, xp: 95, gold: [15, 30], lvl: 7, undead: true },
   lich: { name: 'Mordrith the Acolyte', kind: 'lich', color: '#4a2a6a', hp: 560, atk: 38, def: 14, xp: 650, gold: [300, 400], lvl: 9, boss: true, undead: true, size: 1.2 },
   troll: { name: 'Mountain Troll', kind: 'troll', color: '#5a6a5a', hp: 280, atk: 40, def: 16, xp: 170, gold: [25, 50], lvl: 10, size: 1.15 },
-  drake: { name: 'Ember Drake', kind: 'dragon', color: '#9a3a1a', hp: 240, atk: 46, def: 14, xp: 190, gold: [30, 60], lvl: 11, drops: [['scale', 0.55]] },
+  drake: { name: 'Ash Knight', kind: 'dragon', color: '#9a3a1a', hp: 240, atk: 46, def: 14, xp: 190, gold: [30, 60], lvl: 11, drops: [['scale', 0.55]] },
   cultist: { name: 'Ash Cultist', kind: 'humanoid', color: '#3a1a1a', hp: 200, atk: 42, def: 12, xp: 160, gold: [30, 55], lvl: 10, hood: true, weapon: 'staff' },
   ashfang: { name: 'Ashfang the Undying', kind: 'dragon', color: '#5a1a0a', hp: 1600, atk: 62, def: 22, xp: 2500, gold: [1500, 2000], lvl: 14, boss: true, size: 1.45 }
 };
@@ -107,10 +107,10 @@ const ITEMS = {
   bigpotion: { name: 'Elixir of Vigor', type: 'consumable', heal: 1, price: 90, desc: 'Fully restores HP.', rarity: 3 },
   ether: { name: 'Ether Vial', type: 'consumable', mana: 0.5, price: 30, desc: 'Restores 50% of your resource.', rarity: 2 },
   moonpetal: { name: 'Moonpetal', type: 'quest', desc: 'A glowing silver flower.', rarity: 2 },
-  silk: { name: 'Spider Silk', type: 'quest', desc: 'Strong, sticky strands.', rarity: 1 },
+  silk: { name: 'Witch-Thread', type: 'quest', desc: 'Enchanted thread, faintly humming.', rarity: 1 },
   ring: { name: "Elara's Signet Ring", type: 'quest', desc: 'A ring bearing a swan crest.', rarity: 3 },
   bone: { name: 'Cursed Bone', type: 'quest', desc: 'Cold to the touch.', rarity: 1 },
-  scale: { name: 'Drake Scale', type: 'quest', desc: 'Still warm, glowing faintly.', rarity: 3 }
+  scale: { name: 'Ash Sigil', type: 'quest', desc: 'A cult sigil, still warm.', rarity: 3 }
 };
 
 // Gear tiers — named per class weapon type
@@ -142,7 +142,7 @@ const REGIONS = {
   town: { name: 'Emberfall Village', type: 'town', scene: 'town',
     desc: 'Smoke curls from thatched roofs as villagers whisper of darkness beyond the hills. The tavern hearth glows warm, the smithy rings with hammer-blows, and the old temple bell tolls at dusk.' },
   woods: { name: 'Whispering Woods', lvl: '1–4', scene: 'woods', unlock: 0,
-    desc: 'Ancient oaks crowd the path, their branches murmuring in a wind you cannot feel. Wolves howl in the distance and goblin fires flicker between the trees.',
+    desc: 'Ancient oaks crowd the path, their branches murmuring in a wind you cannot feel. Raiders lurk in the shadows and goblin fires flicker between the trees.',
     enemies: ['wolf', 'wolf', 'spider', 'goblin', 'goblin'], forage: 'moonpetal', boss: 'warchief' },
   crossing: { name: "Bandit's Crossing", lvl: '4–6', scene: 'crossing', unlock: 2,
     desc: 'A ruined stone bridge spans a roaring river. Burnt wagons litter the trade road — the work of Captain Varrek and his cutthroats.',
@@ -151,16 +151,16 @@ const REGIONS = {
     desc: 'Cold air seeps from a cracked mausoleum. Below, the restless dead shamble through flooded halls, and violet light pulses from the deepest vault.',
     enemies: ['skeleton', 'ghoul', 'wraith', 'skeleton'], forage: null, boss: 'lich' },
   peaks: { name: 'Ashfang Peaks', lvl: '10–14', scene: 'peaks', unlock: 6,
-    desc: 'Volcanic slopes glow beneath a blood-red sky. Trolls guard the passes, drakes circle the summit, and from the crater comes the slow breathing of something ancient.',
+    desc: 'Volcanic slopes glow beneath a blood-red sky. Trolls guard the passes, Ash Knights patrol the summit, and from the crater comes the slow breathing of something ancient.',
     enemies: ['troll', 'drake', 'cultist', 'drake'], forage: null, boss: 'ashfang' }
 };
 
 const MAIN_QUESTS = [
   { id: 'm1', title: 'Embers of Warning', giver: 'Elder Maren', region: 'woods',
-    desc: 'Wolves grow bold, attacking travelers on the forest road. Thin their numbers.',
+    desc: 'Raiders grow bold, attacking travelers on the forest road. Thin their numbers.',
     obj: { type: 'kill', target: 'wolf', count: 3 }, xp: 80, gold: 40 },
   { id: 'm2', title: 'The Goblin Warchief', giver: 'Elder Maren', region: 'woods',
-    desc: 'The wolves were driven by goblins. Find their warchief Grukk deep in the woods and end him.',
+    desc: 'The raiders were paid by goblins. Find their warchief Grukk deep in the woods and end him.',
     obj: { type: 'kill', target: 'warchief', count: 1 }, xp: 150, gold: 80, boss: 'warchief' },
   { id: 'm3', title: 'Roads of Blood', giver: 'Captain Hale', region: 'crossing',
     desc: "Grukk carried a bandit's coin purse. Bandits at the crossing are paying goblins to raid. Break their ranks.",
@@ -178,7 +178,7 @@ const MAIN_QUESTS = [
     desc: "Mordrith's dying words: 'Ashfang wakes.' Fight your way up the volcanic peaks.",
     obj: { type: 'killAny', targets: ['troll', 'drake', 'cultist'], count: 5 }, xp: 900, gold: 500 },
   { id: 'm8', title: 'Ashfang the Undying', giver: 'Elder Maren', region: 'peaks',
-    desc: 'The ancient dragon stirs in its crater. Slay Ashfang and save the realm.',
+    desc: 'The ancient dragon-lich Ashfang rises in bone and fire. Destroy it and save the realm.',
     obj: { type: 'kill', target: 'ashfang', count: 1 }, xp: 3000, gold: 2000, boss: 'ashfang' }
 ];
 
@@ -186,8 +186,8 @@ const SIDE_QUESTS = [
   { id: 's1', title: "The Herbalist's Request", giver: 'Old Wenna', minLvl: 1, region: 'woods',
     desc: 'Gather 4 Moonpetals from the Whispering Woods for my remedies.',
     obj: { type: 'collect', item: 'moonpetal', count: 4 }, xp: 70, gold: 35, reward: { potion: 2 } },
-  { id: 's2', title: "Weaver's Silk", giver: 'Tailor Bram', minLvl: 2, region: 'woods',
-    desc: 'Bring me 3 bundles of Giant Spider silk. Finest thread there is.',
+  { id: 's2', title: "Weaver's Thread", giver: 'Tailor Bram', minLvl: 2, region: 'woods',
+    desc: 'Bring me 3 spools of Witch-Thread from the bog witches. Finest thread there is.',
     obj: { type: 'collect', item: 'silk', count: 3 }, xp: 90, gold: 60 },
   { id: 's3', title: 'Goblin Bounty', giver: 'Quest Board', minLvl: 2, region: 'woods',
     desc: 'Bounty posted: slay 5 goblin scouts harassing the farms.',
@@ -207,7 +207,7 @@ const SIDE_QUESTS = [
   { id: 's8', title: 'Troll Slayer', giver: 'Smith Dorrin', minLvl: 10, region: 'peaks',
     desc: 'Mountain trolls block the ore paths. Slay 3 and I will make it worth your while.',
     obj: { type: 'kill', target: 'troll', count: 3 }, xp: 700, gold: 400 },
-  { id: 's9', title: 'Scales of the Drake', giver: 'Smith Dorrin', minLvl: 10, region: 'peaks',
-    desc: 'Bring me 4 Drake Scales — I can forge wonders with them.',
+  { id: 's9', title: 'Sigils of Ash', giver: 'Smith Dorrin', minLvl: 10, region: 'peaks',
+    desc: 'Bring me 4 Ash Sigils from the Ash Knights — I can forge wonders with them.',
     obj: { type: 'collect', item: 'scale', count: 4 }, xp: 800, gold: 500, reward: { bigpotion: 2 } }
 ];
