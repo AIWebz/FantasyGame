@@ -2,6 +2,8 @@ name: Build Windows Installer
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: windows-latest
@@ -16,3 +18,14 @@ jobs:
         with:
           name: RealmOfEmbers-Setup
           path: dist/*.exe
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Realm of Embers v1.0.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          body: |
+            Windows installer for Realm of Embers.
+            Download **Realm.of.Embers.Setup.1.0.0.exe** below, run it, and launch the game from the desktop or Start Menu shortcut.
+          files: dist/*.exe
